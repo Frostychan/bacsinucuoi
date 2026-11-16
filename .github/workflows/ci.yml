@@ -36,6 +36,9 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm ci
 
+      - name: Build production assets
+        run: npm run build
+
       - name: Prepare application key
         run: |
           cp .env.example .env
@@ -43,6 +46,3 @@ jobs:
 
       - name: Run tests
         run: php artisan test --compact
-
-      - name: Build production assets
-        run: npm run build
