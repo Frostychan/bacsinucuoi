@@ -53,7 +53,7 @@ class DatabaseSeederTest extends TestCase
         ]);
     }
 
-    public function test_seeder_does_not_create_legacy_test_accounts_in_production(): void
+    public function test_seeder_does_not_create_demo_accounts_in_production(): void
     {
         config([
             'app.env' => 'production',
@@ -62,9 +62,16 @@ class DatabaseSeederTest extends TestCase
 
         Artisan::call('db:seed', ['--class' => DatabaseSeeder::class, '--no-interaction' => true]);
 
-        $this->assertDatabaseMissing('users', ['email' => 'admin@gmail.com']);
-        $this->assertDatabaseMissing('users', ['email' => 'bacsi@gmail.com']);
-        $this->assertDatabaseMissing('users', ['email' => 'benhnhan@gmail.com']);
+        foreach ([
+            'admin@gmail.com',
+            'bacsi@gmail.com',
+            'benhnhan@gmail.com',
+            'admin@medcare.test',
+            'doctor@medcare.test',
+            'customer@medcare.test',
+        ] as $email) {
+            $this->assertDatabaseMissing('users', ['email' => $email]);
+        }
     }
 
     public function test_seeder_makes_five_additional_doctors_available_in_the_catalog(): void

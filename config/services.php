@@ -42,4 +42,9 @@ return [
         'signature_tolerance_seconds' => 300,
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-flash-latest'),
+    ],
+
 ];

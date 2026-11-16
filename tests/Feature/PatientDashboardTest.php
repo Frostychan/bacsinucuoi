@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Appointment;
 use App\Models\DoctorProfile;
+use App\Models\Specialty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -103,11 +104,22 @@ class PatientDashboardTest extends TestCase
 
     public function test_doctor_catalog_displays_uploaded_doctor_photos(): void
     {
-        $doctor = User::factory()->create(['role' => 'doctor', 'name' => 'Dr. Minh Tran']);
+        $specialty = Specialty::create(['name' => 'Nội tổng quát']);
+        $doctor = User::factory()->create([
+            'role' => 'doctor',
+            'name' => 'Dr. Minh Tran',
+            'email' => 'minh.tran@example.test',
+            'phone' => '0901234567',
+        ]);
         DoctorProfile::create([
             'user_id' => $doctor->id,
+            'specialty_id' => $specialty->id,
+            'license_number' => 'GP-12345',
+            'bio' => 'Experienced <strong>family physician.</strong>',
             'image_path' => 'doctors/minh-tran.jpg',
             'is_accepting' => true,
+            'consultation_fee' => 350000,
+            'slot_duration' => 45,
         ]);
         $secondDoctor = User::factory()->create(['role' => 'doctor', 'name' => 'Dr. Lan Nguyen']);
         DoctorProfile::create([
@@ -123,6 +135,18 @@ class PatientDashboardTest extends TestCase
         $response->assertSee('aria-label="Danh sách bác sĩ"', false);
         $response->assertDontSee('horizontal-scroll-hint', false);
         $response->assertSee('storage/doctors/minh-tran.jpg');
+        $response->assertSee('class="catalog-doctor-summary"', false);
+        $response->assertSee('class="catalog-doctor-details"', false);
+        $response->assertSee('Nội tổng quát');
+        $response->assertSee('GP-12345');
+        $response->assertSee('minh.tran@example.test');
+        $response->assertSee('href="mailto:minh.tran@example.test"', false);
+        $response->assertSee('0901234567');
+        $response->assertSee('href="tel:0901234567"', false);
+        $response->assertSee('45 phút');
+        $response->assertSee('Experienced &lt;strong&gt;family physician.&lt;/strong&gt;', false);
+        $response->assertSee('350.000 đ / lượt');
+        $response->assertSee(route('patient.appointments.create', ['doctor_id' => $doctor->id]), false);
     }
 
     public function test_recent_appointments_use_compact_cards_and_localized_statuses(): void

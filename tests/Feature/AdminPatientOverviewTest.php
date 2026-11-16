@@ -27,8 +27,11 @@ class AdminPatientOverviewTest extends TestCase
         $response->assertSee('Xem trang bệnh nhân');
         $response->assertSee('Giới thiệu MedCare');
         $response->assertSee('Dr. Preview');
+        $response->assertDontSee(
+            'href="'.route('patient.appointments.create', ['doctor_id' => $doctor->id]).'"',
+            false,
+        );
         $response->assertDontSee('Đặt lịch khám');
-        $response->assertDontSee('Đặt lịch với bác sĩ');
         $response->assertDontSee('Lịch hẹn gần đây');
     }
 

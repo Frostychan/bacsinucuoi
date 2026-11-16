@@ -19,11 +19,14 @@
         button, input, select, textarea { font: inherit; }
         .app-shell { display: flex; min-height: 100vh; flex-direction: column; }
         .brand { display: flex; align-items: center; gap: 11px; color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -.03em; white-space: nowrap; }
-        .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: #087e8b; background: #dff7f7; font-size: 18px; }
+        .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: #087e8b; background: #dff7f7; }
+        .brand-mark svg { width: 21px; height: 21px; }
+        .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
         .nav-link { display: inline-flex; align-items: center; gap: 7px; padding: 9px 10px; border-radius: 9px; color: #c4dce5; font-size: 13px; font-weight: 600; transition: .2s ease; white-space: nowrap; }
         .nav-link:hover, .nav-link.active { color: #fff; background: #0c5366; }
         .nav-link.active { box-shadow: inset 0 -2px 0 #66d8d4; }
-        .nav-icon { width: 20px; text-align: center; }
+        .nav-icon { display: grid; width: 20px; flex: 0 0 20px; place-items: center; }
+        .nav-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
         .main { display: flex; min-width: 0; flex: 1; flex-direction: column; }
         .topbar { position: relative; z-index: 5; display: flex; align-items: center; gap: 22px; min-height: 76px; padding: 12px 5.5%; color: #c4dce5; background: linear-gradient(110deg, #063746, #075365); box-shadow: 0 8px 24px rgba(7,59,76,.14); }
         .topbar .topnav { display: flex; align-items: center; gap: 2px; min-width: 0; flex: 1; flex-wrap: wrap; }
@@ -167,14 +170,27 @@
         .doctor-admin-facts .doctor-admin-bio dd { font-weight: 400; line-height: 1.6; white-space: pre-wrap; }
         .doctor-catalog-grid { align-items: stretch; }
         .catalog-doctor-card { overflow: hidden; }
+        .catalog-doctor-summary { display: block; cursor: pointer; list-style: none; }
+        .catalog-doctor-summary::-webkit-details-marker { display: none; }
+        .catalog-doctor-summary:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
         .catalog-doctor-photo-wrap { height: 210px; overflow: hidden; background: linear-gradient(145deg, #d9eff0, #eff7f7); }
         .catalog-doctor-photo { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
         .catalog-doctor-placeholder { display: grid; place-items: center; color: var(--primary); font-size: 62px; font-weight: 700; }
         .catalog-doctor-info { padding: 20px; }
         .catalog-doctor-info h2 { margin: 0 0 9px; color: var(--ink); font-size: 18px; }
         .catalog-doctor-info .doctor-specialty { margin: 0 0 6px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-        .catalog-doctor-info .catalog-doctor-bio { min-height: 42px; margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+        .catalog-doctor-summary-hint { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-size: 12px; font-weight: 700; }
+        .catalog-doctor-summary-hint svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; transition: transform .18s ease; }
+        .catalog-doctor-card[open] .catalog-doctor-summary-hint svg { transform: rotate(180deg); }
+        .catalog-doctor-details { padding: 0 20px 20px; border-top: 1px solid var(--line); }
+        .catalog-doctor-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 16px 0; }
+        .catalog-doctor-facts > div { min-width: 0; }
+        .catalog-doctor-facts dt { margin-bottom: 4px; color: var(--muted); font-size: 11px; }
+        .catalog-doctor-facts dd { margin: 0; color: var(--ink); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+        .catalog-doctor-facts a { color: inherit; text-decoration-color: var(--primary); text-underline-offset: 3px; }
+        .catalog-doctor-bio { margin: 16px 0; color: var(--muted); font-size: 13px; line-height: 1.65; white-space: pre-line; }
         .catalog-doctor-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .catalog-doctor-booking { display: inline-flex; margin-top: 16px; }
         .user-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
         .user-role-card { display: grid; gap: 9px; padding: 18px; border: 1px solid transparent; color: inherit; text-decoration: none; transition: .18s ease; }
         .user-role-card:hover, .user-role-card.is-active { border-color: var(--primary); background: #f1fbfb; box-shadow: 0 8px 20px rgba(8,126,139,.1); transform: translateY(-2px); }
@@ -401,57 +417,114 @@
     </style>
 </head>
 <body>
+    <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <symbol id="icon-medical-cross" viewBox="0 0 24 24">
+            <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" fill="currentColor" stroke="none" />
+        </symbol>
+        <symbol id="icon-dashboard" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="8" height="8" rx="1.5" />
+            <rect x="13" y="3" width="8" height="5" rx="1.5" />
+            <rect x="13" y="10" width="8" height="11" rx="1.5" />
+            <rect x="3" y="13" width="8" height="8" rx="1.5" />
+        </symbol>
+        <symbol id="icon-mail" viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m4 7 8 6 8-6" />
+        </symbol>
+        <symbol id="icon-patients" viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20v-1a6 6 0 0 1 12 0v1H3Zm13-12a3 3 0 1 1 0 6m2 2a5 5 0 0 1 3 4v1h-3" />
+        </symbol>
+        <symbol id="icon-specialties" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <path d="M12 7v10M7 12h10M3 9h4M17 15h4" />
+        </symbol>
+        <symbol id="icon-doctor" viewBox="0 0 24 24">
+            <path d="M6 3v5a6 6 0 0 0 12 0V3M4 3h4m8 0h4m-8 11v2a4 4 0 0 0 8 0v-1" />
+            <circle cx="18" cy="13" r="1" />
+        </symbol>
+        <symbol id="icon-calendar-add" viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M16 3v4M8 3v4M3 10h18m-9 4v5m-2.5-2.5h5" />
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M16 3v4M8 3v4M3 10h18" />
+            <circle cx="12" cy="15" r="3.5" />
+            <path d="M12 13v2l1.5 1" />
+        </symbol>
+        <symbol id="icon-services" viewBox="0 0 24 24">
+            <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+            <path d="M14 3v6h5M9 13h6m-6 4h6" />
+        </symbol>
+        <symbol id="icon-medicine" viewBox="0 0 24 24">
+            <path d="m4.9 14.8 9.9-9.9a5 5 0 0 1 7.1 7.1L12 21.9a5 5 0 0 1-7.1-7.1Z" />
+            <path d="m9.2 10.5 7.1 7.1" />
+        </symbol>
+        <symbol id="icon-users" viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20v-1a6 6 0 0 1 12 0v1H3Zm13-12a3 3 0 1 1 0 6m2 2a5 5 0 0 1 3 4v1h-3" />
+        </symbol>
+        <symbol id="icon-report" viewBox="0 0 24 24">
+            <path d="M4 20V10m8 10V4m8 16v-7" />
+            <path d="M2 20h20" />
+        </symbol>
+        <symbol id="icon-profile" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+        </symbol>
+    </svg>
     <div class="app-shell">
         <div class="main">
             <header class="topbar">
-                <a class="brand" href="{{ route('dashboard') }}"><span class="brand-mark">✚</span><span>MedCare</span></a>
+                <a class="brand" href="{{ route('dashboard') }}"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-medical-cross" /></svg></span><span>MedCare</span></a>
                 @php($role = auth()->user()->role ?? 'guest')
                 <nav class="topnav" aria-label="Điều hướng chính">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard', '*.dashboard') ? 'active' : '' }}"><span class="nav-icon">⌂</span><span>Tổng quan</span></a>
-                    <a href="{{ route('contact.create') }}" class="nav-link {{ request()->routeIs('contact.*') ? 'active' : '' }}"><span class="nav-icon">✉</span><span>Liên hệ</span></a>
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard', '*.dashboard') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-dashboard" /></svg></span><span>Tổng quan</span></a>
+                    <a href="{{ route('contact.create') }}" class="nav-link {{ request()->routeIs('contact.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-mail" /></svg></span><span>Liên hệ</span></a>
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.patient-overview'))
-                        <a href="{{ route('admin.patient-overview') }}" class="nav-link {{ request()->routeIs('admin.patient-overview') ? 'active' : '' }}"><span class="nav-icon">⌕</span><span>Xem trang bệnh nhân</span></a>
+                        <a href="{{ route('admin.patient-overview') }}" class="nav-link {{ request()->routeIs('admin.patient-overview') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-patients" /></svg></span><span>Xem trang bệnh nhân</span></a>
                     @endif
                     @if (auth()->user()?->isRole('customer'))
-                        <a href="{{ route('catalog.specialties') }}" class="nav-link {{ request()->routeIs('catalog.specialties') ? 'active' : '' }}"><span class="nav-icon">▦</span><span>Chuyên khoa</span></a>
-                        <a href="{{ route('catalog.doctors') }}" class="nav-link {{ request()->routeIs('catalog.doctors') ? 'active' : '' }}"><span class="nav-icon">✚</span><span>Bác sĩ</span></a>
-                        <a href="{{ route('patient.appointments.create') }}" class="nav-link {{ request()->routeIs('patient.appointments.create') ? 'active' : '' }}"><span class="nav-icon">＋</span><span>Đặt lịch khám</span></a>
-                        <a href="{{ route('patient.appointments.index') }}" class="nav-link {{ request()->routeIs('patient.appointments.index') ? 'active' : '' }}"><span class="nav-icon">◷</span><span>Lịch khám của tôi</span></a>
-                        <a href="{{ route('catalog.services') }}" class="nav-link {{ request()->routeIs('catalog.services') ? 'active' : '' }}"><span class="nav-icon">▤</span><span>Dịch vụ</span></a>
+                        <a href="{{ route('catalog.specialties') }}" class="nav-link {{ request()->routeIs('catalog.specialties') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-specialties" /></svg></span><span>Chuyên khoa</span></a>
+                        <a href="{{ route('catalog.doctors') }}" class="nav-link {{ request()->routeIs('catalog.doctors') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-doctor" /></svg></span><span>Bác sĩ</span></a>
+                        <a href="{{ route('patient.appointments.create') }}" class="nav-link {{ request()->routeIs('patient.appointments.create') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar-add" /></svg></span><span>Đặt lịch khám</span></a>
+                        <a href="{{ route('patient.appointments.index') }}" class="nav-link {{ request()->routeIs('patient.appointments.index') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar" /></svg></span><span>Lịch khám của tôi</span></a>
+                        <a href="{{ route('catalog.services') }}" class="nav-link {{ request()->routeIs('catalog.services') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-services" /></svg></span><span>Dịch vụ</span></a>
                     @elseif (! auth()->user()?->isRole('admin'))
-                        <a href="{{ route('catalog.specialties') }}" class="nav-link {{ request()->routeIs('catalog.specialties') ? 'active' : '' }}"><span class="nav-icon">▦</span><span>Chuyên khoa</span></a>
-                        <a href="{{ route('catalog.doctors') }}" class="nav-link {{ request()->routeIs('catalog.doctors') ? 'active' : '' }}"><span class="nav-icon">✚</span><span>Bác sĩ</span></a>
-                        <a href="{{ route('catalog.services') }}" class="nav-link {{ request()->routeIs('catalog.services') ? 'active' : '' }}"><span class="nav-icon">▤</span><span>Dịch vụ</span></a>
+                        <a href="{{ route('catalog.specialties') }}" class="nav-link {{ request()->routeIs('catalog.specialties') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-specialties" /></svg></span><span>Chuyên khoa</span></a>
+                        <a href="{{ route('catalog.doctors') }}" class="nav-link {{ request()->routeIs('catalog.doctors') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-doctor" /></svg></span><span>Bác sĩ</span></a>
+                        <a href="{{ route('catalog.services') }}" class="nav-link {{ request()->routeIs('catalog.services') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-services" /></svg></span><span>Dịch vụ</span></a>
                     @endif
                     @if (auth()->user()?->isRole('doctor') && Route::has('doctor.appointments.index'))
-                        <a href="{{ route('doctor.appointments.index') }}" class="nav-link {{ request()->routeIs('doctor.appointments.*') ? 'active' : '' }}"><span class="nav-icon">◷</span><span>Lịch bệnh nhân</span></a>
+                        <a href="{{ route('doctor.appointments.index') }}" class="nav-link {{ request()->routeIs('doctor.appointments.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar" /></svg></span><span>Lịch bệnh nhân</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.appointments.index'))
-                        <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}"><span class="nav-icon">◷</span><span>Tất cả lịch hẹn</span></a>
+                        <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar" /></svg></span><span>Tất cả lịch hẹn</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.products.index'))
-                        <a href="{{ route('admin.products.index') }}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"><span class="nav-icon">▤</span><span>Quản lý dịch vụ</span></a>
+                        <a href="{{ route('admin.products.index') }}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-services" /></svg></span><span>Quản lý dịch vụ</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.medicines.index'))
-                        <a href="{{ route('admin.medicines.index') }}" class="nav-link {{ request()->routeIs('admin.medicines.*') ? 'active' : '' }}"><span class="nav-icon">✚</span><span>Giá thuốc</span></a>
+                        <a href="{{ route('admin.medicines.index') }}" class="nav-link {{ request()->routeIs('admin.medicines.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-medicine" /></svg></span><span>Giá thuốc</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.contact-messages.index'))
-                        <a href="{{ route('admin.contact-messages.index') }}" class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><span class="nav-icon">✉</span><span>Liên hệ mới</span></a>
+                        <a href="{{ route('admin.contact-messages.index') }}" class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-mail" /></svg></span><span>Liên hệ mới</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.users.index'))
-                        <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><span class="nav-icon">♙</span><span>Người dùng</span></a>
+                        <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-users" /></svg></span><span>Người dùng</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.doctors.index'))
-                        <a href="{{ route('admin.doctors.index') }}" class="nav-link {{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}"><span class="nav-icon">✚</span><span>Bác sĩ</span></a>
+                        <a href="{{ route('admin.doctors.index') }}" class="nav-link {{ request()->routeIs('admin.doctors.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-doctor" /></svg></span><span>Bác sĩ</span></a>
                     @endif
                     @if (Route::has('admin.specialties.index'))
-                        <a href="{{ route('admin.specialties.index') }}" class="nav-link {{ request()->routeIs('admin.specialties.*') ? 'active' : '' }}"><span class="nav-icon">▦</span><span>Chuyên khoa</span></a>
+                        <a href="{{ route('admin.specialties.index') }}" class="nav-link {{ request()->routeIs('admin.specialties.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-specialties" /></svg></span><span>Chuyên khoa</span></a>
                     @endif
                     @if (Route::has('admin.reports.index'))
-                        <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"><span class="nav-icon">▤</span><span>Báo cáo</span></a>
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-report" /></svg></span><span>Báo cáo</span></a>
                     @endif
                     @if (Route::has('profile.edit') && ! auth()->user()?->isRole('customer'))
-                        <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"><span class="nav-icon">◎</span><span>Hồ sơ</span></a>
+                        <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-profile" /></svg></span><span>Hồ sơ</span></a>
                     @endif
                 </nav>
                 <div class="user-chip">
@@ -580,5 +653,6 @@
             }
         });
     </script>
+    @include('layouts.chatbot')
 </body>
 </html>

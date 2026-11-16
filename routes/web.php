@@ -10,6 +10,13 @@ use App\Http\Controllers\MedicineOrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChatbotController;
+
+Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot');
+Route::post('/chatbot/send', [ChatbotController::class, 'send'])
+->middleware('throttle:20,1') // tối đa 20 tin/phút, chống spam
+->name('chatbot.send');
+Route::post('/chatbot/reset', [ChatbotController::class, 'reset'])->name('chatbot.reset');
 
 // Nhóm Route dành riêng cho Admin (Bắt buộc đăng nhập + role là admin)
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

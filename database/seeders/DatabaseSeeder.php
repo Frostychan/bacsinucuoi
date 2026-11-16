@@ -23,33 +23,31 @@ class DatabaseSeeder extends Seeder
             ['description' => 'Khám và điều trị các bệnh lý nội khoa thường gặp.'],
         );
 
-        $accounts = [
-            [
-                'name' => 'Quản trị viên',
-                'email' => 'admin@medcare.test',
-                'role' => 'admin',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Bác sĩ Nguyễn An',
-                'email' => 'doctor@medcare.test',
-                'role' => 'doctor',
-                'password' => 'password',
-                'license_number' => 'MED-DEMO-001',
-            ],
-            [
-                'name' => 'Khách hàng Demo',
-                'email' => 'customer@medcare.test',
-                'role' => 'customer',
-                'password' => 'password',
-            ],
-        ];
+        $accounts = [];
 
         if (in_array(config('app.env'), ['local', 'testing'], true)) {
             $legacyTestPassword = $this->legacyTestPassword();
 
             $accounts = [
-                ...$accounts,
+                [
+                    'name' => 'Quản trị viên',
+                    'email' => 'admin@medcare.test',
+                    'role' => 'admin',
+                    'password' => 'password',
+                ],
+                [
+                    'name' => 'Bác sĩ Nguyễn An',
+                    'email' => 'doctor@medcare.test',
+                    'role' => 'doctor',
+                    'password' => 'password',
+                    'license_number' => 'MED-DEMO-001',
+                ],
+                [
+                    'name' => 'Khách hàng Demo',
+                    'email' => 'customer@medcare.test',
+                    'role' => 'customer',
+                    'password' => 'password',
+                ],
                 [
                     'name' => 'Quản trị viên thử nghiệm',
                     'email' => 'admin@gmail.com',

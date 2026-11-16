@@ -37,6 +37,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame([
             route('dashboard'),
+            route('contact.create'),
             route('catalog.specialties'),
             route('catalog.doctors'),
             route('patient.appointments.create'),

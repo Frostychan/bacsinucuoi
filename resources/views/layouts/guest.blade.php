@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ request()->routeIs('register') ? 'Tạo tài khoản' : (request()->routeIs('login') ? 'Đăng nhập' : 'Xác thực tài khoản') }} · MedCare</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -13,7 +14,11 @@
             <div class="absolute -bottom-48 -left-40 h-[34rem] w-[34rem] rounded-full border border-white/10"></div>
 
             <a href="{{ route('login') }}" class="relative flex w-fit items-center gap-3 text-xl font-bold tracking-tight text-white">
-                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-2xl text-teal-200" aria-hidden="true">✚</span>
+                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-teal-200" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" />
+                    </svg>
+                </span>
                 MedCare
             </a>
 
@@ -42,7 +47,11 @@
         <main class="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
             <div class="w-full max-w-md">
                 <a href="{{ route('login') }}" class="mb-8 flex items-center justify-center gap-3 text-xl font-bold tracking-tight text-[#073b4c] lg:hidden">
-                    <span class="grid h-11 w-11 place-items-center rounded-2xl bg-teal-50 text-2xl text-teal-700" aria-hidden="true">✚</span>
+                    <span class="grid h-11 w-11 place-items-center rounded-2xl bg-teal-50 text-teal-700" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" />
+                        </svg>
+                    </span>
                     MedCare
                 </a>
 
@@ -64,5 +73,6 @@
             </div>
         </main>
     </div>
+    @include('layouts.chatbot')
 </body>
 </html>
