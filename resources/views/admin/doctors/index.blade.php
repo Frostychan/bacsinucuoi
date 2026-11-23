@@ -15,9 +15,13 @@
         @php($profile = $doctor->doctorProfile)
         <details class="card doctor-admin-card">
             <summary class="doctor-admin-summary">
-                @if ($profile?->image_path)
+                @if ($profile?->image_path && ! str_starts_with($profile->image_path, 'images/doctors/catalog/'))
                     <img class="doctor-admin-photo"
                         src="{{ str_starts_with($profile->image_path, 'images/') ? asset($profile->image_path) : asset('storage/'.$profile->image_path) }}"
+                        alt="Ảnh bác sĩ {{ $doctor->name }}" loading="lazy">
+                @elseif (preg_match('/doctor(\d{3})@medcare\.test/', (string) $doctor->email, $catalogMatch) && (int) $catalogMatch[1] <= 30)
+                    <img class="doctor-admin-photo"
+                        src="{{ asset('images/doctors/catalog/doctor-'.str_pad((string) (int) $catalogMatch[1], 3, '0', STR_PAD_LEFT).'.png') }}"
                         alt="Ảnh bác sĩ {{ $doctor->name }}" loading="lazy">
                 @else
                     <span class="doctor-admin-photo doctor-admin-placeholder" role="img"

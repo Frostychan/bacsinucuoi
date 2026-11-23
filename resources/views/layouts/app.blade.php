@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#073b4c">
+    <link rel="icon" type="image/png" href="{{ asset('images/brand/medcare-mark.png') }}">
     <title>@yield('title', 'MedCare') · MedCare</title>
     <style>
         :root {
@@ -19,8 +20,8 @@
         button, input, select, textarea { font: inherit; }
         .app-shell { display: flex; min-height: 100vh; flex-direction: column; }
         .brand { display: flex; align-items: center; gap: 11px; color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -.03em; white-space: nowrap; }
-        .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: #087e8b; background: #dff7f7; }
-        .brand-mark svg { width: 21px; height: 21px; }
+        .brand-mark { display: grid; width: 54px; height: 54px; place-items: center; flex: 0 0 54px; }
+        .brand-mark img { width: 54px; height: 54px; object-fit: contain; }
         .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
         .nav-link { display: inline-flex; align-items: center; gap: 7px; padding: 9px 10px; border-radius: 9px; color: #c4dce5; font-size: 13px; font-weight: 600; transition: .2s ease; white-space: nowrap; }
         .nav-link:hover, .nav-link.active { color: #fff; background: #0c5366; }
@@ -56,7 +57,7 @@
         tr:hover td { background: #fcfeff; }
         .product-name, .appointment-name { color: var(--ink); font-weight: 700; }
         .product-id { color: #8ca5b3; font-size: 12px; }
-        .price { color: var(--primary-dark); font-weight: 800; }
+        .price { color: var(--primary-dark); font-weight: 800; white-space: nowrap; }
         .stock, .status { display: inline-flex; padding: 5px 10px; border-radius: 20px; color: var(--success); background: #e5f7f0; font-size: 12px; font-weight: 700; }
         .stock.empty, .status.pending { color: var(--warning); background: #fff5dd; }
         .actions { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
@@ -138,6 +139,13 @@
         .recent-appointment-fee { color: var(--ink); font-size: 12px; font-weight: 800; }
         .recent-appointment-link { color: var(--primary); font-size: 11px; font-weight: 800; white-space: nowrap; }
         .recent-appointment-link:hover { color: var(--primary-dark); }
+        .link-arrow { display: inline-block; margin-left: 2px; font-size: 10px; line-height: 1; vertical-align: 1px; }
+        .pagination-compact { display: flex; align-items: center; justify-content: center; gap: 4px; width: fit-content; min-height: 32px; margin-top: 20px; }
+        .pagination-compact-link, .pagination-compact-current, .pagination-compact-disabled, .pagination-compact-dots { display: inline-grid; width: 32px; height: 32px; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: #475d70; background: #fff; font-size: 12px; font-weight: 800; line-height: 1; text-decoration: none; }
+        .pagination-compact-link:hover { border-color: #48bfc0; color: var(--primary-dark); background: #eef9f8; }
+        .pagination-compact-current { border-color: var(--primary); color: #fff; background: var(--primary); }
+        .pagination-compact-disabled { color: #a6b4bc; background: #f7f9fa; cursor: default; }
+        .pagination-compact-dots { border: 0; background: transparent; }
         .appointment-status { display: inline-flex; flex: 0 0 auto; align-items: center; padding: 5px 9px; border-radius: 999px; color: #765c16; background: #fff5dc; font-size: 10px; font-weight: 800; white-space: nowrap; }
         .appointment-status-confirmed { color: #765c16; background: #fff0bc; }
         .appointment-status-completed { color: #285e9a; background: #eaf2ff; }
@@ -159,7 +167,7 @@
         .doctor-admin-summary-copy { display: grid; min-width: 0; gap: 5px; }
         .doctor-admin-summary-copy strong { overflow: hidden; color: var(--ink); font-size: 14px; text-overflow: ellipsis; }
         .doctor-admin-summary-copy span, .doctor-admin-summary-copy small { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-        .doctor-admin-toggle { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; color: var(--primary); background: #e2f6f6; font-size: 18px; font-weight: 700; }
+        .doctor-admin-toggle { display: grid; width: 16px; height: 16px; place-items: center; border-radius: 50%; color: var(--primary); background: #e2f6f6; font-size: 11px; line-height: 1; font-weight: 800; }
         .doctor-admin-card[open] .doctor-admin-toggle { transform: rotate(45deg); }
         .doctor-admin-details { padding: 0 16px 18px; border-top: 1px solid var(--line); }
         .doctor-admin-details h2, .doctor-admin-details h3 { margin: 16px 0 12px; color: var(--ink); font-size: 14px; }
@@ -180,7 +188,7 @@
         .catalog-doctor-info h2 { margin: 0 0 9px; color: var(--ink); font-size: 18px; }
         .catalog-doctor-info .doctor-specialty { margin: 0 0 6px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
         .catalog-doctor-summary-hint { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-size: 12px; font-weight: 700; }
-        .catalog-doctor-summary-hint svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; transition: transform .18s ease; }
+        .catalog-doctor-summary-hint svg { width: 8px; height: 8px; flex: 0 0 8px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; transition: transform .18s ease; }
         .catalog-doctor-card[open] .catalog-doctor-summary-hint svg { transform: rotate(180deg); }
         .catalog-doctor-details { padding: 0 20px 20px; border-top: 1px solid var(--line); }
         .catalog-doctor-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 16px 0; }
@@ -226,7 +234,7 @@
         .patient-user-summary-copy strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }
         .patient-user-summary-copy span, .patient-user-created { color: var(--muted); font-size: 12px; }
         .patient-user-summary-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .patient-user-toggle { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; color: var(--primary); background: #e2f6f6; font-size: 18px; font-weight: 700; }
+        .patient-user-toggle { display: grid; width: 16px; height: 16px; place-items: center; border-radius: 50%; color: var(--primary); background: #e2f6f6; font-size: 11px; line-height: 1; font-weight: 800; }
         .patient-user-card[open] .patient-user-toggle { transform: rotate(45deg); }
         .patient-user-details { padding: 0 18px 18px; border-top: 1px solid var(--line); }
         .patient-user-details h3 { margin: 16px 0 11px; color: var(--ink); font-size: 14px; }
@@ -296,6 +304,9 @@
         .medicine-option { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 22px; border: 0; color: var(--ink); background: #fff; cursor: pointer; font-size: 13px; text-align: left; }
         .medicine-option:hover:not(:disabled), .medicine-option:focus-visible { outline: none; background: #eef9f8; }
         .medicine-option:disabled { color: #8da4b1; background: #fbfcfe; cursor: default; }
+        .medicine-admin-photo { display: block; width: 78px; height: 58px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 10px; object-fit: cover; background: #edf8f7; }
+        .medicine-image-input { width: 78px; max-width: 78px; padding: 4px; font-size: 10px; }
+        .medicine-option-photo { width: 48px; height: 48px; flex: 0 0 48px; border: 1px solid var(--line); border-radius: 10px; object-fit: cover; background: #edf8f7; }
         .medicine-option-action { color: var(--primary); font-size: 12px; font-weight: 700; }
         .medicine-option:disabled .medicine-option-action { color: var(--success); }
         .medicine-table-wrap > .form-help { padding: 0 15px 12px; }
@@ -374,7 +385,8 @@
         }
         @media (max-width: 760px) {
             .virtual-qr-panel { align-items: flex-start; flex-direction: column-reverse; }
-            .brand { font-size: 18px; } .brand-mark { width: 32px; height: 32px; }
+            .brand { font-size: 18px; } .brand-mark { width: 44px; height: 44px; }
+            .brand-mark img { width: 44px; height: 44px; }
             .topbar .user-name:not(.customer-profile-link), .topbar .logout-button, .role-badge { display: none; }
             .topbar .customer-profile-link { display: inline-flex; max-width: 112px; font-size: 11px; }
             .nav-link { padding: 8px 9px; font-size: 12px; }
@@ -477,7 +489,7 @@
     <div class="app-shell">
         <div class="main">
             <header class="topbar">
-                <a class="brand" href="{{ route('dashboard') }}"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-medical-cross" /></svg></span><span>MedCare</span></a>
+                <a class="brand" href="{{ route('dashboard') }}"><span class="brand-mark"><img src="{{ asset('images/brand/medcare-mark.png') }}" alt="" aria-hidden="true"></span><span>MedCare</span></a>
                 @php($role = auth()->user()->role ?? 'guest')
                 <nav class="topnav" aria-label="Điều hướng chính">
                     <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard', '*.dashboard') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-dashboard" /></svg></span><span>Tổng quan</span></a>
@@ -507,9 +519,6 @@
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.medicines.index'))
                         <a href="{{ route('admin.medicines.index') }}" class="nav-link {{ request()->routeIs('admin.medicines.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-medicine" /></svg></span><span>Giá thuốc</span></a>
-                    @endif
-                    @if (auth()->user()?->isRole('admin') && Route::has('admin.contact-messages.index'))
-                        <a href="{{ route('admin.contact-messages.index') }}" class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-mail" /></svg></span><span>Liên hệ mới</span></a>
                     @endif
                     @if (auth()->user()?->isRole('admin') && Route::has('admin.users.index'))
                         <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-users" /></svg></span><span>Người dùng</span></a>

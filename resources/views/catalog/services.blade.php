@@ -18,7 +18,7 @@
             <div>
                 <h2>{{ $service->name }}</h2>
                 <p>{{ $service->description ?: 'Thông tin dịch vụ đang được cập nhật.' }}</p>
-                <strong class="price">{{ number_format($service->price, 0, ',', '.') }} đ</strong>
+                <strong class="price">{{ number_format($service->price, 0, ',', '.') }}&nbsp;đ</strong>
             </div>
         </article>
     @empty

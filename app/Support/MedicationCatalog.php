@@ -4,12 +4,28 @@ namespace App\Support;
 
 class MedicationCatalog
 {
+    public static function imagePath(string $medicineName): string
+    {
+        $slug = mb_strtolower(trim($medicineName));
+        $slug = str_replace(
+            [' ', '(', ')', '/'],
+            ['-', '', '', '-'],
+            $slug,
+        );
+        $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug) ?: 'placeholder';
+        $imagePath = public_path('images/medicines/'.$slug.'.svg');
+
+        return file_exists($imagePath)
+            ? 'images/medicines/'.$slug.'.svg'
+            : 'images/medicines/placeholder.svg';
+    }
+
     /**
      * @return array<int, string>
      */
     public static function all(): array
     {
-        return [
+        $fallback = [
             'Paracetamol',
             'Ibuprofen',
             'Amoxicillin',
@@ -31,6 +47,26 @@ class MedicationCatalog
             'Salbutamol',
             'Guaifenesin',
         ];
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('medicines')) {
+                $databaseNames = \App\Models\Medicine::query()
+                    ->orderBy('name')
+                    ->pluck('name')
+                    ->filter()
+                    ->unique(fn (string $name): string => mb_strtolower($name))
+                    ->values()
+                    ->all();
+
+                if ($databaseNames !== []) {
+                    return $databaseNames;
+                }
+            }
+        } catch (\Throwable) {
+            // Keep the built-in catalog available if the database is temporarily unavailable.
+        }
+
+        return $fallback;
     }
 
     /**

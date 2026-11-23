@@ -41,6 +41,20 @@ class DoctorMedicalRecordTest extends TestCase
         $this->assertSame(20, substr_count($response->getContent(), 'data-medication-option data-medication='));
     }
 
+    public function test_new_admin_medicine_is_available_when_creating_a_prescription(): void
+    {
+        $doctor = User::factory()->create(['role' => 'doctor']);
+        $appointment = $this->createAppointment($doctor, 'completed');
+        Medicine::create(['name' => 'Efferalgan', 'unit' => 'viên']);
+
+        $response = $this->actingAs($doctor)
+            ->get(route('doctor.medical-records.create', $appointment));
+
+        $response->assertOk()
+            ->assertSee('Efferalgan')
+            ->assertSee('data-medication="Efferalgan"', false);
+    }
+
     public function test_doctor_can_save_a_medical_record_for_a_completed_appointment(): void
     {
         $doctor = User::factory()->create(['role' => 'doctor']);

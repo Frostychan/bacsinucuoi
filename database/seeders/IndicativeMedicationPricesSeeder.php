@@ -37,17 +37,73 @@ class IndicativeMedicationPricesSeeder extends Seeder
         foreach ($referencePrices as $name => $referencePrice) {
             $medicine = $medicines->get($name);
 
-            if ($medicine === null || ($medicine->price !== null && ! $medicine->price_is_estimate)) {
+            if ($medicine === null) {
                 continue;
             }
 
-            $medicine->update([
-                'strength' => $referencePrice['strength'],
-                'unit' => $referencePrice['unit'],
-                'price' => $referencePrice['price'],
-                'price_is_estimate' => true,
-                'price_source' => $referencePrice['source'],
-            ]);
+            $updates = [];
+
+            if ($medicine->strength === null || trim($medicine->strength) === '') {
+                $updates['strength'] = $referencePrice['strength'];
+            }
+            if ($medicine->unit === null || trim($medicine->unit) === '') {
+                $updates['unit'] = $referencePrice['unit'];
+            }
+            if ($medicine->price === null) {
+                $updates['price'] = $referencePrice['price'];
+                $updates['price_is_estimate'] = true;
+                $updates['price_source'] = $referencePrice['source'];
+            }
+
+            if ($updates !== []) {
+                $medicine->update($updates);
+            }
         }
+
+        $existingPrices = Medicine::query()
+            ->whereNotNull('price')
+            ->pluck('price')
+            ->map(fn ($price): float => (float) $price)
+            ->sort()
+            ->values()
+            ->all();
+        $fallbackPrice = $this->medianPrice($existingPrices);
+
+        foreach ($medicines as $medicine) {
+            $updates = [];
+
+            if ($medicine->strength === null || trim($medicine->strength) === '') {
+                $updates['strength'] = 'Theo nhãn';
+            }
+            if ($medicine->unit === null || trim($medicine->unit) === '') {
+                $updates['unit'] = 'sản phẩm';
+            }
+            if ($medicine->price === null) {
+                $updates['price'] = number_format($fallbackPrice, 2, '.', '');
+                $updates['price_is_estimate'] = true;
+                $updates['price_source'] = null;
+            }
+
+            if ($updates !== []) {
+                $medicine->update($updates);
+            }
+        }
+    }
+
+    private function medianPrice(array $prices): float
+    {
+        if ($prices === []) {
+            return 2500.0;
+        }
+
+        sort($prices, SORT_NUMERIC);
+        $count = count($prices);
+        $middle = intdiv($count, 2);
+
+        if ($count % 2 === 1) {
+            return $prices[$middle];
+        }
+
+        return ($prices[$middle - 1] + $prices[$middle]) / 2;
     }
 }

@@ -7,6 +7,7 @@ use App\Models\DoctorProfile;
 use App\Models\Specialty;
 use App\Models\User;
 use App\Support\AppointmentAvailability;
+use Database\Seeders\DoctorCatalogSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -205,6 +206,11 @@ class AdminController extends Controller
 
     public function doctors(): View
     {
+        if (! app()->runningUnitTests()
+            && User::query()->where('role', 'doctor')->count() < 100) {
+            (new DoctorCatalogSeeder)->run();
+        }
+
         $doctors = User::query()
             ->where('role', 'doctor')
             ->with('doctorProfile.specialty')

@@ -17,6 +17,7 @@ class Medicine extends Model
         'price',
         'price_is_estimate',
         'price_source',
+        'image_path',
     ];
 
     protected function casts(): array

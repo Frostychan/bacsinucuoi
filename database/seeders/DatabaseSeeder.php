@@ -162,6 +162,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DoctorPortraitSeeder::class,
             MedicationCatalogSeeder::class,
+            IndicativeMedicationPricesSeeder::class,
+            MedicalServiceCatalogSeeder::class,
+            DoctorCatalogSeeder::class,
         ]);
 
         User::whereNull('role')->update(['role' => 'customer']);

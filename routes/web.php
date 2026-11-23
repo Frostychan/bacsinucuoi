@@ -34,8 +34,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/doctors', [AdminController::class, 'storeDoctor'])->name('doctors.store');
     Route::patch('/doctors/{user}', [AdminController::class, 'updateDoctor'])->name('doctors.update');
     Route::get('/medicines', [MedicationController::class, 'index'])->name('medicines.index');
+    Route::post('/medicines/import-openfda', [MedicationController::class, 'importOpenFda'])->name('medicines.import-openfda');
+    Route::post('/medicines', [MedicationController::class, 'store'])->name('medicines.store');
     Route::patch('/medicines/{medicine}', [MedicationController::class, 'update'])->name('medicines.update');
     Route::get('/contact-messages', [ContactController::class, 'adminIndex'])->name('contact-messages.index');
+    Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::resource('/products', ProductController::class);
 });
 

@@ -16,8 +16,10 @@
         <details class="card catalog-doctor-card">
             <summary class="catalog-doctor-summary" aria-label="Xem thông tin bác sĩ {{ $doctor->user->name }}">
                 <div class="catalog-doctor-photo-wrap">
-                    @if ($doctor->image_path)
+                    @if ($doctor->image_path && ! str_starts_with($doctor->image_path, 'images/doctors/catalog/'))
                         <img class="catalog-doctor-photo" src="{{ str_starts_with($doctor->image_path, 'images/') ? asset($doctor->image_path) : asset('storage/'.$doctor->image_path) }}" alt="Ảnh minh họa bác sĩ {{ $doctor->user->name }}" loading="lazy">
+                    @elseif (preg_match('/doctor(\d{3})@medcare\.test/', (string) $doctor->user->email, $catalogMatch) && (int) $catalogMatch[1] <= 30)
+                        <img class="catalog-doctor-photo" src="{{ asset('images/doctors/catalog/doctor-'.str_pad((string) (int) $catalogMatch[1], 3, '0', STR_PAD_LEFT).'.png') }}" alt="Ảnh minh họa bác sĩ {{ $doctor->user->name }}" loading="lazy">
                     @else
                         <div class="catalog-doctor-photo catalog-doctor-placeholder" role="img" aria-label="Chưa có ảnh bác sĩ {{ $doctor->user->name }}">{{ strtoupper(substr($doctor->user->name, 0, 1)) }}</div>
                     @endif

@@ -17,6 +17,7 @@ class IndicativeMedicationPriceTest extends TestCase
         $seeder->run();
         $this->assertSame(20, Medicine::query()->whereNotNull('price')->where('price_is_estimate', true)->count());
         $this->assertSame(5, Medicine::query()->whereNotNull('price_source')->where('price_is_estimate', true)->count());
+        $this->assertSame(20, Medicine::query()->whereNotNull('strength')->whereNotNull('unit')->count());
 
         $adminEnteredMedicine = Medicine::query()->where('name', 'Paracetamol')->firstOrFail();
         $adminEnteredMedicine->update([
@@ -39,5 +40,35 @@ class IndicativeMedicationPriceTest extends TestCase
             'price_source' => 'https://clinic.example/prices',
         ]);
         $this->assertSame(19, Medicine::query()->whereNotNull('price')->where('price_is_estimate', true)->count());
+    }
+
+    public function test_price_seeder_fills_new_medicine_with_median_existing_price_without_replacing_any_price(): void
+    {
+        $seeder = new IndicativeMedicationPricesSeeder;
+        $seeder->run();
+
+        $paracetamol = Medicine::query()->where('name', 'Paracetamol')->firstOrFail();
+        $paracetamol->update([
+            'price' => '9999.00',
+            'price_is_estimate' => false,
+        ]);
+        $unknown = Medicine::create(['name' => 'Efferalgan']);
+
+        $seeder->run();
+
+        $this->assertDatabaseHas('medicines', [
+            'id' => $unknown->id,
+            'price_is_estimate' => true,
+        ]);
+        $this->assertDatabaseHas('medicines', [
+            'id' => $paracetamol->id,
+            'price' => '9999.00',
+            'price_is_estimate' => false,
+        ]);
+
+        $unknown->refresh();
+        $this->assertNotSame(null, $unknown->price);
+        $this->assertSame('Theo nhãn', $unknown->strength);
+        $this->assertSame('sản phẩm', $unknown->unit);
     }
 }

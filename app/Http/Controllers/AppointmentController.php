@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -202,6 +203,9 @@ class AppointmentController extends Controller
         $this->authorize('update', $appointment);
         abort_unless($appointment->status === 'completed', 422, 'Chỉ có thể lập hồ sơ sau khi hoàn tất lịch hẹn.');
         $appointment->load('patient', 'medicalRecord.medications');
+        $medicines = Schema::hasColumn('medicines', 'image_path')
+            ? Medicine::query()->orderBy('name')->get(['id', 'name', 'image_path'])
+            : Medicine::query()->orderBy('name')->get(['id', 'name']);
         $prescribedMedicationQuantities = $appointment->medicalRecord?->medications
             ->pluck('quantity', 'medicine_name')
             ->all() ?? [];
@@ -213,6 +217,7 @@ class AppointmentController extends Controller
 
         return view('doctor.medical-records.create', compact(
             'appointment',
+            'medicines',
             'prescribedMedicationQuantities',
             'prescriptionDetails',
         ));
@@ -226,7 +231,7 @@ class AppointmentController extends Controller
             'diagnosis' => ['required', 'string', 'max:5000'],
             'prescription' => ['nullable', 'string', 'max:5000'],
             'medications' => ['nullable', 'array', 'max:20'],
-            'medications.*.name' => ['required', 'string', Rule::in(MedicationCatalog::all()), 'distinct'],
+            'medications.*.name' => ['required', 'string', Rule::in(Medicine::query()->pluck('name')->all()), 'distinct'],
             'medications.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);

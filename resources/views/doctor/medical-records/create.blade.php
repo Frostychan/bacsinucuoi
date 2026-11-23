@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Hồ sơ y tế')
 @section('content')
-@php($medications = \App\Support\MedicationCatalog::all())
 <div class="page-heading"><div><p class="eyebrow">Bệnh nhân: {{ $appointment->patient->name }}</p><h1>Hồ sơ y tế</h1></div></div>
 <div class="card form-card">
     <form id="medical-record-form" method="POST" action="{{ route('doctor.medical-records.store', $appointment) }}">
@@ -33,8 +32,12 @@
                     @foreach ($medications as $medication)
                         <tr data-medication-row>
                             <td>
-                                <button class="medicine-option" type="button" data-medication-option data-medication="{{ $medication }}">
-                                    <span>{{ $medication }}</span>
+                                <button class="medicine-option" type="button" data-medication-option data-medication="{{ $medication->name }}">
+                                    @php($medicineImage = $medication->image_path
+                                        ? (str_starts_with($medication->image_path, 'images/') ? asset($medication->image_path) : asset('storage/'.$medication->image_path))
+                                        : asset(\App\Support\MedicationCatalog::imagePath($medication->name)))
+                                    <img class="medicine-option-photo" src="{{ $medicineImage }}" alt="" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/medicines/placeholder.svg') }}';">
+                                    <span>{{ $medication->name }}</span>
                                     <span class="medicine-option-action">Thêm</span>
                                 </button>
                             </td>

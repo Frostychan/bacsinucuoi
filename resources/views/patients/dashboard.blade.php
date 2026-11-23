@@ -47,8 +47,10 @@
         @forelse ($doctors as $doctor)
             <article class="card doctor-showcase-card">
                 <div class="doctor-photo-wrap">
-                    @if ($doctor->doctorProfile?->image_path)
+                    @if ($doctor->doctorProfile?->image_path && ! str_starts_with($doctor->doctorProfile->image_path, 'images/doctors/catalog/'))
                         <img class="doctor-photo" src="{{ str_starts_with($doctor->doctorProfile->image_path, 'images/') ? asset($doctor->doctorProfile->image_path) : asset('storage/'.$doctor->doctorProfile->image_path) }}" alt="Ảnh minh họa bác sĩ {{ $doctor->name }}" loading="lazy">
+                    @elseif (preg_match('/doctor(\d{3})@medcare\.test/', (string) $doctor->email, $catalogMatch) && (int) $catalogMatch[1] <= 30)
+                        <img class="doctor-photo" src="{{ asset('images/doctors/catalog/doctor-'.str_pad((string) (int) $catalogMatch[1], 3, '0', STR_PAD_LEFT).'.png') }}" alt="Ảnh minh họa bác sĩ {{ $doctor->name }}" loading="lazy">
                     @else
                         <div class="doctor-photo doctor-photo-placeholder" role="img" aria-label="Chưa có ảnh bác sĩ {{ $doctor->name }}">{{ strtoupper(substr($doctor->name, 0, 1)) }}</div>
                     @endif
@@ -70,7 +72,7 @@
     </div>
     @if ($hasMoreDoctors ?? false)
         <div class="doctor-showcase-more">
-            <a class="btn btn-ghost" href="{{ route('catalog.doctors') }}">Xem thêm bác sĩ <span aria-hidden="true">→</span></a>
+            <a class="btn btn-ghost" href="{{ route('catalog.doctors') }}">Xem thêm bác sĩ <span class="link-arrow" aria-hidden="true">→</span></a>
         </div>
     @endif
 </section>
@@ -78,7 +80,7 @@
 @unless ($adminPreview ?? false)
     <section class="patient-booking-banner">
         <div><p class="eyebrow">Bạn đã sẵn sàng?</p><h2>Chọn thời gian khám phù hợp với bạn</h2><p>Gửi yêu cầu đặt lịch trực tuyến chỉ với vài bước đơn giản.</p></div>
-        <a class="btn btn-primary" href="{{ route('patient.appointments.create') }}">Bắt đầu đặt lịch <span aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="{{ route('patient.appointments.create') }}">Bắt đầu đặt lịch <span class="link-arrow" aria-hidden="true">→</span></a>
     </section>
 @endunless
 
@@ -86,7 +88,7 @@
     <section class="recent-appointments">
     <div class="section-heading">
         <div><p class="eyebrow">Theo dõi sức khỏe</p><h2>Lịch hẹn gần đây</h2></div>
-        <a class="section-link" href="{{ route('patient.appointments.index') }}">Xem tất cả <span aria-hidden="true">→</span></a>
+        <a class="section-link" href="{{ route('patient.appointments.index') }}">Xem tất cả <span class="link-arrow" aria-hidden="true">→</span></a>
     </div>
     <div class="recent-appointments-grid">
         @php
@@ -112,7 +114,7 @@
                     <p class="recent-appointment-reason">{{ $appointment->reason }}</p>
                     <div class="recent-appointment-footer">
                         <span class="recent-appointment-fee">{{ number_format($appointment->consultation_fee ?? 0, 0, ',', '.') }} đ</span>
-                        <a href="{{ route('patient.appointments.show', $appointment) }}" class="recent-appointment-link" aria-label="Xem lịch hẹn với {{ $appointment->doctor->name }}">Chi tiết <span aria-hidden="true">→</span></a>
+                        <a href="{{ route('patient.appointments.show', $appointment) }}" class="recent-appointment-link" aria-label="Xem lịch hẹn với {{ $appointment->doctor->name }}">Chi tiết <span class="link-arrow" aria-hidden="true">→</span></a>
                     </div>
                 </div>
             </article>

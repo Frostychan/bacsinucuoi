@@ -3,16 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Database\Seeders\MedicalServiceCatalogSeeder;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use JsonException;
 
 class ProductController extends Controller
 {
     public function index(): View
     {
-        $products = Product::all();
+        if (Product::query()->count() < 300) {
+            (new MedicalServiceCatalogSeeder)->run();
+        }
+
+        $products = Product::query()->orderBy('name')->get();
 
         return view('products.index', compact('products'));
     }
@@ -31,6 +40,63 @@ class ProductController extends Controller
         Product::create($data);
 
         return redirect()->route('admin.products.index')->with('success', 'Dịch vụ đã được tạo.');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $validatedFile = $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'mimetypes:application/json,application/x-json,text/json,text/plain',
+                'extensions:json',
+                'max:2048',
+            ],
+        ], [
+            'file.required' => 'Vui lòng chọn tệp JSON cần nhập.',
+            'file.file' => 'Tệp được tải lên không hợp lệ.',
+            'file.extensions' => 'Chỉ chấp nhận tệp có phần mở rộng .json.',
+            'file.max' => 'Dung lượng tệp JSON không được vượt quá 2 MB.',
+        ]);
+
+        try {
+            $products = json_decode($validatedFile['file']->get(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            throw ValidationException::withMessages([
+                'file' => 'Tệp được tải lên không chứa JSON hợp lệ.',
+            ]);
+        }
+
+        if (! is_array($products) || ! array_is_list($products)) {
+            throw ValidationException::withMessages([
+                'file' => 'JSON phải có dạng danh sách sản phẩm.',
+            ]);
+        }
+
+        $validatedProducts = Validator::make(
+            ['products' => $products],
+            [
+                'products' => ['required', 'array', 'min:1', 'max:500'],
+                'products.*' => ['required', 'array:name,price,stock,description'],
+                ...$this->productRules('products.*.'),
+                'products.*.stock' => ['sometimes', 'integer', 'min:0', 'max:2147483647'],
+            ],
+            [
+                'products.min' => 'Tệp JSON phải có ít nhất một sản phẩm.',
+                'products.max' => 'Chỉ được nhập tối đa 500 sản phẩm trong một lần.',
+                'products.*.array' => 'Mỗi sản phẩm chỉ được có các trường name, price, stock và description.',
+                'products.*.stock.max' => 'Số lượng mỗi sản phẩm không được vượt quá 2.147.483.647.',
+            ],
+        )->validate()['products'];
+
+        DB::transaction(function () use ($validatedProducts): void {
+            foreach ($validatedProducts as $product) {
+                Product::create($product);
+            }
+        });
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Đã nhập '.count($validatedProducts).' dịch vụ từ tệp JSON.');
     }
 
     public function show(string $id): View
@@ -67,13 +133,13 @@ class ProductController extends Controller
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, Closure|string>>
      */
-    private function productRules(): array
+    private function productRules(string $prefix = ''): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'price' => [
+            $prefix.'name' => ['required', 'string', 'max:255'],
+            $prefix.'price' => [
                 'required',
                 'numeric',
                 'min:0',
@@ -94,8 +160,8 @@ class ProductController extends Controller
                     }
                 },
             ],
-            'stock' => ['nullable', 'integer', 'min:0'],
-            'description' => ['nullable', 'string', 'max:5000'],
+            $prefix.'stock' => ['nullable', 'integer', 'min:0'],
+            $prefix.'description' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }
