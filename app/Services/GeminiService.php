@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use ErrorException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use JsonException;
@@ -40,56 +41,99 @@ TXT;
      */
     public function chat(array $history, string $message, array $availableDoctors = []): string
     {
-        $apiKey = (string) config('services.gemini.key');
+        $apiKey = trim((string) config('services.gemini.key'));
         if ($apiKey === '') {
             Log::error('Gemini: thiếu GEMINI_API_KEY trong cấu hình.');
             throw new RuntimeException('Trợ lý đang gặp sự cố cấu hình, bạn thử lại sau nhé.');
         }
 
-        $model = trim((string) config('services.gemini.model'));
-        if ($model === '') {
-            $model = 'gemini-3.8-flash';
+        $primaryModel = trim((string) config('services.gemini.model'));
+        if ($primaryModel === '') {
+            $primaryModel = 'gemini-3.8-flash';
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+        // Danh sách model thử theo thứ tự nếu model chính gặp lỗi 503.
+        $candidateModels = array_values(array_unique(array_filter([
+            $primaryModel,
+            'gemini-2.5-flash',
+        ])));
+
         // Ghép lịch sử và câu hỏi mới theo định dạng Gemini.
         $contents = [];
         foreach ($history as $turn) {
             $contents[] = ['role' => $turn['role'], 'parts' => [['text' => $turn['text']]]];
         }
         $contents[] = ['role' => 'user', 'parts' => [['text' => $message]]];
+
         $systemInstruction = $this->systemPrompt
             ."\n\nHãy dùng dữ liệu JSON sau làm hướng dẫn quy trình đặt lịch:\n"
             .$this->bookingGuidance();
         $systemInstruction .= "\n\nDanh sách bác sĩ hiện đang nhận lịch (dữ liệu động từ website):\n"
             .$this->encodeAvailableDoctors($availableDoctors);
 
-        // Gọi API với thời gian chờ tối đa 30 giây.
-        try {
-            $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
-                ->timeout(30)
-                ->post($url, [
-                    'system_instruction' => ['parts' => [[
-                        'text' => $systemInstruction,
-                    ]]],
-                    'contents' => $contents,
+        $payload = [
+            'system_instruction' => ['parts' => [[
+                'text' => $systemInstruction,
+            ]]],
+            'contents' => $contents,
+        ];
+
+        $response = null;
+        $usedModel = $primaryModel;
+        $maxAttemptsPerModel = 2;
+
+        foreach ($candidateModels as $model) {
+            $usedModel = $model;
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+
+            for ($attempt = 1; $attempt <= $maxAttemptsPerModel; $attempt++) {
+                try {
+                    /** @var Response $response */
+                    $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
+                        ->timeout(30)
+                        ->post($url, $payload);
+                } catch (Throwable $e) {
+                    Log::error('Gemini: không kết nối được', [
+                        'model' => $model,
+                        'attempt' => $attempt,
+                        'error' => $e->getMessage(),
+                    ]);
+                    if ($attempt === $maxAttemptsPerModel && $model === end($candidateModels)) {
+                        throw new RuntimeException('Không kết nối được tới trợ lý AI, bạn thử lại sau nhé.');
+                    }
+                    usleep(500000);
+                    continue;
+                }
+
+                if (! $response->failed() || $response->status() !== 503) {
+                    break 2;
+                }
+
+                Log::warning('Gemini: quá tải tạm thời (503), đang thử lại', [
+                    'model' => $model,
+                    'attempt' => $attempt,
                 ]);
-        } catch (Throwable $e) {
-            Log::error('Gemini: không kết nối được', ['error' => $e->getMessage()]);
-            throw new RuntimeException('Không kết nối được tới trợ lý AI, bạn thử lại sau nhé.');
+
+                if ($attempt < $maxAttemptsPerModel) {
+                    usleep(600000);
+                }
+            }
         }
+
         // Xử lý lỗi từ Gemini.
-        if ($response->failed()) {
+        if ($response === null || $response->failed()) {
+            $status = $response?->status() ?? 503;
             Log::error('Gemini: lỗi API', [
-                'status' => $response->status(),
-                'model' => $model,
-                'body' => $response->body(),
+                'status' => $status,
+                'model' => $usedModel,
+                'body' => $response?->body(),
             ]);
-            if ($response->status() === 429) {
+            if ($status === 429) {
                 throw new RuntimeException('Trợ lý đang quá tải, bạn đợi một phút rồi hỏi lại nhé.');
             }
             throw new RuntimeException('Trợ lý đang gặp sự cố, bạn thử lại sau nhé.');
         }
+
         $text = $response->json('candidates.0.content.parts.0.text');
 
         return trim($text ?? '') !== ''
