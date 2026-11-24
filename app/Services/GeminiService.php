@@ -40,9 +40,18 @@ TXT;
      */
     public function chat(array $history, string $message, array $availableDoctors = []): string
     {
-        $model = config('services.gemini.model');
-        $url =
-        "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+        $apiKey = (string) config('services.gemini.key');
+        if ($apiKey === '') {
+            Log::error('Gemini: thiếu GEMINI_API_KEY trong cấu hình.');
+            throw new RuntimeException('Trợ lý đang gặp sự cố cấu hình, bạn thử lại sau nhé.');
+        }
+
+        $model = trim((string) config('services.gemini.model'));
+        if ($model === '') {
+            $model = 'gemini-2.5-flash';
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
         // Ghép lịch sử và câu hỏi mới theo định dạng Gemini.
         $contents = [];
         foreach ($history as $turn) {
@@ -57,7 +66,7 @@ TXT;
 
         // Gọi API với thời gian chờ tối đa 30 giây.
         try {
-            $response = Http::withHeaders(['x-goog-api-key' => config('services.gemini.key')])
+            $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
                 ->timeout(30)
                 ->post($url, [
                     'system_instruction' => ['parts' => [[
@@ -71,8 +80,11 @@ TXT;
         }
         // Xử lý lỗi từ Gemini.
         if ($response->failed()) {
-            Log::error('Gemini: lỗi API', ['status' => $response->status(),
-                'body' => $response->body()]);
+            Log::error('Gemini: lỗi API', [
+                'status' => $response->status(),
+                'model' => $model,
+                'body' => $response->body(),
+            ]);
             if ($response->status() === 429) {
                 throw new RuntimeException('Trợ lý đang quá tải, bạn đợi một phút rồi hỏi lại nhé.');
             }
