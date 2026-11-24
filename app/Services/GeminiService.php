@@ -36,8 +36,8 @@ Bạn là trợ lý ảo của website Đặt lịch khám bệnh.
 TXT;
 
     /**
-     * @param  array<int, array{role: 'user'|'model', text: string}>  $history
-     * @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
+- @param  array<int, array{role: 'user'|'model', text: string}>  $history
+- @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
      */
     public function chat(array $history, string $message, array $availableDoctors = []): string
     {
@@ -78,7 +78,7 @@ TXT;
 
         $response = null;
         $usedModel = $primaryModel;
-        $maxAttemptsPerModel = 4;
+        $maxAttemptsPerModel = 2;
 
         foreach ($candidateModels as $model) {
             $usedModel = $model;
@@ -88,7 +88,8 @@ TXT;
                 try {
                     /** @var Response $response */
                     $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
-                        ->timeout(30)
+                        ->connectTimeout(5)
+                        ->timeout(10)
                         ->post($url, $payload);
                 } catch (Throwable $e) {
                     Log::error('Gemini: không kết nối được', [
@@ -99,7 +100,7 @@ TXT;
                     if ($attempt === $maxAttemptsPerModel && $model === end($candidateModels)) {
                         throw new RuntimeException('Không kết nối được tới trợ lý AI, bạn thử lại sau nhé.');
                     }
-                    sleep($attempt);
+                    usleep(300000);
                     continue;
                 }
 
@@ -113,7 +114,7 @@ TXT;
                 ]);
 
                 if ($attempt < $maxAttemptsPerModel) {
-                    sleep($attempt);
+                    usleep(300000);
                 }
             }
         }
@@ -140,7 +141,7 @@ TXT;
     }
 
     /**
-     * @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
+- @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
      */
     private function plainText(string $text, array $availableDoctors): string
     {
@@ -173,7 +174,7 @@ TXT;
     }
 
     /**
-     * @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
+- @param  array<int, array{id: int, name: string, specialty: string, bio: ?string, consultation_fee: string, slot_duration: int, profile_url: string, booking_url: string}>  $availableDoctors
      */
     private function encodeAvailableDoctors(array $availableDoctors): string
     {
