@@ -48,7 +48,7 @@ TXT;
 
         $model = trim((string) config('services.gemini.model'));
         if ($model === '') {
-            $model = 'gemini-2.5-flash';
+            $model = 'gemini-3.8-flash';
         }
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
