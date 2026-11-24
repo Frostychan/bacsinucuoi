@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "export:pages": "php artisan app:export-static-site"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
