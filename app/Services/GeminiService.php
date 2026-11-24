@@ -52,10 +52,8 @@ TXT;
             $primaryModel = 'gemini-3.8-flash';
         }
 
-        // Danh sách model thử theo thứ tự nếu model chính gặp lỗi 503.
         $candidateModels = array_values(array_unique(array_filter([
             $primaryModel,
-            'gemini-2.5-flash',
         ])));
 
         // Ghép lịch sử và câu hỏi mới theo định dạng Gemini.
@@ -80,7 +78,7 @@ TXT;
 
         $response = null;
         $usedModel = $primaryModel;
-        $maxAttemptsPerModel = 2;
+        $maxAttemptsPerModel = 4;
 
         foreach ($candidateModels as $model) {
             $usedModel = $model;
@@ -101,7 +99,7 @@ TXT;
                     if ($attempt === $maxAttemptsPerModel && $model === end($candidateModels)) {
                         throw new RuntimeException('Không kết nối được tới trợ lý AI, bạn thử lại sau nhé.');
                     }
-                    usleep(500000);
+                    sleep($attempt);
                     continue;
                 }
 
@@ -115,7 +113,7 @@ TXT;
                 ]);
 
                 if ($attempt < $maxAttemptsPerModel) {
-                    usleep(600000);
+                    sleep($attempt);
                 }
             }
         }
